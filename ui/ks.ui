@@ -150,11 +150,6 @@
     </property>
     <row>
      <property name="text">
-      <string> </string>
-     </property>
-    </row>
-    <row>
-     <property name="text">
       <string>1</string>
      </property>
     </row>
@@ -182,12 +177,33 @@
      <property name="text">
       <string>项目</string>
      </property>
-    </column>
-    <column>
-     <property name="text">
-      <string>描述</string>
+     <property name="textAlignment">
+      <set>AlignCenter</set>
+     </property>
+     <property name="foreground">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>0</red>
+        <green>0</green>
+        <blue>0</blue>
+       </color>
+      </brush>
      </property>
     </column>
+    <item row="0" column="0">
+     <property name="text">
+      <string>更新订单最近一个月数据</string>
+     </property>
+     <property name="background">
+      <brush brushstyle="NoBrush">
+       <color alpha="255">
+        <red>0</red>
+        <green>0</green>
+        <blue>0</blue>
+       </color>
+      </brush>
+     </property>
+    </item>
    </widget>
    <widget class="QLabel" name="label_table">
     <property name="geometry">
