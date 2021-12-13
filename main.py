@@ -1,5 +1,8 @@
 import sys
-
+import PySide2
+dirname = os.path.dirname(PySide2.__file__)
+plugin_path = os.path.join(dirname, 'plugins', 'platforms')
+os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = plugin_path
 # 这里我们提供必要的引用。基本控件位于pyqt5.qtwidgets模块中。
 from PySide2.QtWidgets import QApplication, QWidget, QMainWindow, QPushButton, QStatusBar, QProgressBar
 import time
@@ -8,23 +11,30 @@ from threading import Thread
 from PySide2.QtCore import Signal, QObject, QFile
 from PySide2.QtUiTools import QUiLoader
 import json
-
 # from ks import Ui_KSUpdate
 import urllib.request
 from functools import partial
+
+# dirname = os.path.dirname(PySide2.__file__)
+# plugin_path = os.path.join(dirname, 'plugins', 'platforms')
+# os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = plugin_path
+
 
 updateOrderTableUrl = "http://dev.xchtzon.top:8088/index/updateOrderTable"
 updateBillTableUrl = "http://dev.xchtzon.top:8088/index/updateBillTable"
 updateItemTable = "http://dev.xchtzon.top:8088/index/updateItemTable"
 
 getActivityList = "http://dev.xchtzon.top:8088/index/getAllActivityIdList"
-
-
+# pyinstaller main.py  --hidden-import PySide2.QtGui
+    # dirname = os.path.dirname(__file__)
+    # plugin_path = os.path.join(dirname, 'plugins', 'platforms')
+    # os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = plugin_path
+# pyinstaller -F main.pyw
 updateBeginTime = 1617120000
 updateDayCell = 5
 
 startWork = True
-workSleep = 0
+workSleep = 100
 # designer.exe地址
 # C:\Users\10278\AppData\Local\Programs\Python\Python38\Lib\site-packages\qt5_applications\Qt\bin
 
@@ -75,10 +85,10 @@ class MainWindow(QMainWindow):
         elif(repeat_thread_detection('updateOtherMonth')):
             so.text_append.emit('正在更新旧数据')
         else:
-            # Thread(target=updateThisMonth, name='updateThisMonth').start()
-            # Thread(target=updateLastMonth, name='updateLastMonth').start()
-            # Thread(target=updateBillThisMonth, name='updateBillThisMonth').start()
-            # Thread(target=updateBillLastMonth, name='updateBillLastMonth').start()
+            Thread(target=updateThisMonth, name='updateThisMonth').start()
+            Thread(target=updateLastMonth, name='updateLastMonth').start()
+            Thread(target=updateBillThisMonth, name='updateBillThisMonth').start()
+            Thread(target=updateBillLastMonth, name='updateBillLastMonth').start()
             Thread(target=updateActivityList, name='updateActivityList').start()
             
             
@@ -91,17 +101,11 @@ class MainWindow(QMainWindow):
     def bt_update_other(self):
         global startWork
         startWork = False
-        # self.ui.statusbar.showMessage('正在更新两个月前数据...(五分钟后开始更新,更新结束前请不要进行其他操作)')
-        # time.sleep(300)
-
-        # self.setStatusBar().showMessage('正在更新两个月前数据...')
         self.ui.statusbar.showMessage('正在更新两个月前数据(不建议频繁更新,一周一次即可)')
         # so.text_append.emit('你点击了开始更新按钮')
         if not repeat_thread_detection('updateOtherMonth'):
             Thread(target=updateOtherMonth, name='updateOtherMonth').start()
             Thread(target=updateBillOtherMonth, name='updateBillOtherMonth').start()
-            
-            # Thread(target=updateLastMonth).start()
         else:
             # print('func线程还处于活动状态，请勿启动新的实例')
             so.text_append.emit('已开启更新,请勿重复开启')
@@ -211,7 +215,7 @@ def updateBillLastMonth():
             # so.text_append.emit('账单上一个月数据更新,当前任务第'+str(num)+'次更新,查询范围:\n'+time.strftime(
             #     "%Y-%m-%d %H:%M:%S", timeStartFormat)+'至'+time.strftime("%Y-%m-%d %H:%M:%S", timeEndFormat))
             so.text_append.emit('账单上一个月数据更新,当前任务第'+str(num)+'次更新')
-            res = askUrl(updateOrderTableUrl+'?'+'settlementTimeStart=' +
+            res = askUrl(updateBillTableUrl+'?'+'settlementTimeStart=' +
                         timeStart+'&settlementTimeEnd='+str(endTime*1000))
             if(res['code'] == 200):
                 so.text_append.emit('账单上一个月数据更新任务进度:' + str(speed)+'%')
@@ -246,7 +250,7 @@ def updateBillOtherMonth():
         #     "%Y-%m-%d %H:%M:%S", timeStartFormat)+'至'+time.strftime("%Y-%m-%d %H:%M:%S", timeEndFormat))
         so.text_append.emit('账单两个月前数据更新,当前任务第'+str(num)+'次更新')
         # print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(time.time()))))
-        res = askUrl(updateOrderTableUrl+'?'+'settlementTimeStart=' +
+        res = askUrl(updateBillTableUrl+'?'+'settlementTimeStart=' +
                     timeStart+'&settlementTimeEnd='+str(endTime*1000))
         if(res['code'] == 200):
             # SELECT *  FROM `order` WHERE `order_create_time` BETWEEN '2021-11-12 14:11:16.000000' AND '2021-12-12 14:12:00.000000' ORDER BY `order_create_time`  DESC
