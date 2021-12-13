@@ -25,10 +25,13 @@ updateBillTableUrl = "http://dev.xchtzon.top:8088/index/updateBillTable"
 updateItemTable = "http://dev.xchtzon.top:8088/index/updateItemTable"
 
 getActivityList = "http://dev.xchtzon.top:8088/index/getAllActivityIdList"
+#引入包缺失错误
 # pyinstaller main.py  --hidden-import PySide2.QtGui
-    # dirname = os.path.dirname(__file__)
-    # plugin_path = os.path.join(dirname, 'plugins', 'platforms')
-    # os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = plugin_path
+#找不到运行平台错误
+# dirname = os.path.dirname(__file__)
+# plugin_path = os.path.join(dirname, 'plugins', 'platforms')
+# os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = plugin_path
+#打包后运行出现命令行解决，后缀名更改
 # pyinstaller -F main.pyw
 updateBeginTime = 1617120000
 updateDayCell = 5
