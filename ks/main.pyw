@@ -2,6 +2,7 @@ import sys
 import PySide2
 import PySide2.QtGui
 from PySide2.QtGui import QIcon
+import datetime
 
 # dirname = os.path.dirname(PySide2.__file__)
 # plugin_path = os.path.join(dirname, 'plugins', 'platforms')
@@ -43,11 +44,11 @@ deleteUpdateTableExcel = BaseUrl+"/index/deleteUpdateTableExcel"
 # 打包后运行出现命令行解决，后缀名更改
 # pyinstaller -F main.pyw
 updateBeginTime = 1617120000
-updateDayCell = 5
+updateDayCell = 4
 
-startWork = True
-workSleep = 3600
-secondWorkSleep = 7200
+startWork = False
+workSleep = 120
+secondWorkSleep = 1800
 # designer.exe地址
 # C:\Users\10278\AppData\Local\Programs\Python\Python38\Lib\site-packages\qt5_applications\Qt\bin
 
@@ -57,7 +58,11 @@ secondWorkSleep = 7200
 class SignalStore(QObject):
     # 定义一种信号
     progress_update = Signal(int)
+    progress_item_update = Signal(int)
+    
     text_append = Signal(str)
+    statusbar_show = Signal(str)
+    
 
     # 还可以定义其他作用的信号
 
@@ -74,7 +79,7 @@ class MainWindow(QMainWindow):
         # qfile_ks.open(QFile.ReadOnly)
         # qfile_ks.close()
 
-        self.ui = QUiLoader().load("ks.ui")
+        self.ui = QUiLoader().load("ui\ks.ui")
         # super(mainWindow, self).__init__()
         # self.setupUi(self)
         self.ui.pushButton_start.clicked.connect(self.bt_start)
@@ -83,36 +88,39 @@ class MainWindow(QMainWindow):
         # self.ui.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         # self.ui.tableWidget.horizontalHeader().setSectionResizeMode(0, QHeaderView.Interactive)
         # 连接信号到处理的slot函数
+        
         so.progress_update.connect(self.setProgress)
         self.ui.progressBar.setRange(0, 100)
+        so.progress_item_update.connect(self.setProgressItem)
+        self.ui.progressBar_item.setRange(0, 100)
+        so.statusbar_show.connect(self.setStatusbar)
+        self.ui.statusbar.showMessage('')
+        
 
         # self.ui.createStatusBar()
         so.text_append.connect(self.textAppend)
         self.setIcon()
 
     def setIcon(self):
-        appIcon = QIcon("D:\\wamp64\\www\\xc-ks-python\\ks\\xc_logo.png")
+        appIcon = QIcon("ui\\xc_logo.png")
         self.ui.setWindowIcon(appIcon)
 
     def bt_start(self):
         global startWork
-        startWork = True
         # self.setStatusBar().showMessage('正在更新...')
-        self.ui.statusbar.showMessage('正在更新')
-        so.text_append.emit('你点击了开始更新按钮')
+        # so.text_append.emit('你点击了开始更新按钮')
         if repeat_thread_detection('updateThisMonth'):
-            so.text_append.emit('已开启更新,请勿重复开启')
+            so.text_append.emit('正在更新,请勿重复开启')
         elif(repeat_thread_detection('updateOtherMonth')):
             so.text_append.emit('正在更新旧数据')
         else:
-            Thread(target=updateThisMonth, name='updateThisMonth').start()
-            Thread(target=updateBillThisMonth,name='updateBillThisMonth').start()
-            # time.sleep(1)
-            Thread(target=updateLastMonth, name='updateLastMonth').start()
-            # time.sleep(1)
-            Thread(target=updateBillLastMonth, name='updateBillLastMonth').start()
-            # time.sleep(1)
-            Thread(target=updateActivityList,name='updateActivityList').start()
+            startWork = True
+            self.ui.statusbar.showMessage('正在更新')
+            Thread(target=isTimeFrame, name='isTimeFrame').start()
+            Thread(target=startUpdateThread, name='startUpdateThread').start()
+            # Thread(target=testStartWork, name='testStartWork').start()
+            
+
             # time.sleep(1)
 
     def bt_stop(self):
@@ -127,9 +135,10 @@ class MainWindow(QMainWindow):
         self.ui.statusbar.showMessage('正在更新两个月前数据(不建议频繁更新,一周一次即可)')
         # so.text_append.emit('你点击了开始更新按钮')
         if not repeat_thread_detection('updateOtherMonth'):
-            Thread(target=updateOtherMonth, name='updateOtherMonth').start()
-            Thread(target=updateBillOtherMonth,name='updateBillOtherMonth').start()
-            Thread(target=updateOtherActivityList,name='updateOtherActivityList').start()
+            # Thread(target=updateOtherMonth, name='updateOtherMonth').start()
+            # Thread(target=updateBillOtherMonth,name='updateBillOtherMonth').start()
+            # Thread(target=updateOtherActivityList,name='updateOtherActivityList').start()
+            Thread(target=startOtherUpdateThread,name='startOtherUpdateThread').start()
 
         else:
             # print('func线程还处于活动状态，请勿启动新的实例')
@@ -140,11 +149,109 @@ class MainWindow(QMainWindow):
 
     def setProgress(self, value):
         self.ui.progressBar.setValue(value)
+        
+    def setProgressItem(self, value):
+        self.ui.progressBar_item.setValue(value)
+        
+    def setStatusbar(self, value):
+        self.ui.statusbar.showMessage(value)
 
+
+def startUpdateThread():
+    Thread(target=updateThisMonth, name='updateThisMonth').start()
+    time.sleep(2)
+    Thread(target=updateBillThisMonth, name='updateBillThisMonth').start()
+    time.sleep(2)
+    Thread(target=updateLastMonth, name='updateLastMonth').start()
+    time.sleep(2)
+    Thread(target=updateBillLastMonth, name='updateBillLastMonth').start()
+    time.sleep(2)
+    Thread(target=updateActivityList, name='updateActivityList').start()
+
+
+def startOtherUpdateThread():
+    Thread(target=updateOtherMonth, name='updateOtherMonth').start()
+    time.sleep(2)
+    Thread(target=updateBillOtherMonth, name='updateBillOtherMonth').start()
+    time.sleep(2)
+    Thread(target=updateOtherActivityList,name='updateOtherActivityList').start()
+
+# def testStartWork():
+#     global startWork
+#     while startWork:
+#         print(123)
+#         time.sleep(3)
+        
+
+def isTimeFrame():
+    global startWork
+    # 范围时间
+    thisFunctionStart = True
+    while True:
+        d_time = datetime.datetime.strptime(
+            str(datetime.datetime.now().date())+'02:45', '%Y-%m-%d%H:%M')
+        d_time1 = datetime.datetime.strptime(
+            str(datetime.datetime.now().date())+'03:05', '%Y-%m-%d%H:%M')
+        # 当前时间
+        n_time = datetime.datetime.now()
+        # print(n_time)
+        # 判断当前时间是否在范围时间内
+        if (n_time > d_time and n_time < d_time1) and startWork == True:
+            # if not repeat_thread_detection('updateOtherMonth'):
+            startWork = False
+            so.text_append.emit('------------------')            
+            so.text_append.emit('不在更新时间范围内,暂停循环更新操作')
+            so.statusbar_show.emit('不在更新时间范围内,停止更新')
+            time.sleep(0)
+            
+            Thread(target=deleteUpdateFile, name='deleteUpdateFile').start()
+            thisFunctionStart=False
+
+        elif not(n_time > d_time and n_time < d_time1):
+            if not repeat_thread_detection('updateOtherMonth') and thisFunctionStart == False:
+                startWork = True
+                so.text_append.emit('------------------')            
+                so.text_append.emit('进入更新时间范围内,开始循环更新操作')
+                so.statusbar_show.emit('正在更新')
+
+            # Thread(target=isTimeFrame, name='isTimeFrame').start()
+                Thread(target=startUpdateThread, name='startUpdateThread').start()
+                thisFunctionStart = True
+        time.sleep(60)
+        # else:
+        #     startWork = True
+
+def deleteUpdateFile():
+    global startWork
+    # 范围时间
+    while True:
+        d_time = datetime.datetime.strptime(
+            str(datetime.datetime.now().date())+'03:00', '%Y-%m-%d%H:%M')
+        d_time1 = datetime.datetime.strptime(
+            str(datetime.datetime.now().date())+'03:05', '%Y-%m-%d%H:%M')
+        # 当前时间
+        n_time = datetime.datetime.now()
+        # print(n_time)
+        # 判断当前时间是否在范围时间内
+        if (n_time > d_time and n_time < d_time1) and startWork == False:
+            resOrder = askUrl(deleteUpdateTableExcel+'?file_path=order')
+            if(resOrder['code'] == 200):
+                so.text_append.emit('------------------')
+                so.text_append.emit('删除更新订单缓存文件成功')
+            else:
+                so.text_append.emit('------------------')
+                so.text_append.emit('删除更新订单缓存文件失败')
+            resBill = askUrl(deleteUpdateTableExcel+'?file_path=bill')
+            if(resBill['code'] == 200):
+                so.text_append.emit('------------------')
+                so.text_append.emit('删除更新账单缓存文件成功')
+            else:
+                so.text_append.emit('------------------')
+                so.text_append.emit('删除更新账单缓存文件失败')
+
+        time.sleep(280)
 
 def updateActivityList():
-    time.sleep(2)
-    
     global startWork
     if(startWork == False):
         so.text_append.emit('更新循环已停止')
@@ -159,11 +266,11 @@ def updateActivityList():
         so.text_append.emit('商品更新循环第'+str(allNum) +
                             '次,本次循环任务查询次数:'+str(work_num))
         for activity in activitys:
-            res = activitys = askUrl(
-                updateItemTable+'?activityId='+str(activity))
+            res = askUrl(updateItemTable+'?activityId='+str(activity))
             speed = num*(100/work_num)
             if(res['code'] == 200):
-                so.text_append.emit('正在更新商品表,当前任务进度:'+str(speed)[0:4]+' %')
+                so.progress_item_update.emit(speed)
+                # so.text_append.emit('正在更新商品表,当前任务进度:'+str(speed)[0:4]+' %')
                 # endTime = endTime-(updateDayCell*24*60*60)
             else:
                 so.text_append.emit(
@@ -185,8 +292,7 @@ def updateOtherActivityList():
     so.text_append.emit('------------------')
     so.text_append.emit('商品旧数据更新循环任务查询次数:'+str(work_num))
     for activity in activitys:
-        res = activitys = askUrl(
-            updateItemTable+'?activityId='+str(activity))
+        res = askUrl(updateItemTable+'?activityId='+str(activity))
         speed = num*(100/work_num)
         if(res['code'] == 200):
             so.text_append.emit('正在更新商品旧数据,当前任务进度:'+str(speed)[0:4]+' %')
@@ -202,8 +308,6 @@ def updateOtherActivityList():
 
 
 def updateBillThisMonth():
-    time.sleep(6)
-    
     global startWork
     if(startWork == False):
         so.text_append.emit('更新循环已停止')
@@ -228,7 +332,7 @@ def updateBillThisMonth():
                 speed = 100
             # so.text_append.emit('账单近一个月数据更新,当前任务第'+str(num)+'次更新,查询范围:\n'+time.strftime(
             #     "%Y-%m-%d %H:%M:%S", timeStartFormat)+'至'+time.strftime("%Y-%m-%d %H:%M:%S", timeEndFormat))
-            so.text_append.emit('账单近一个月数据更新,当前任务第'+str(num)+'次查询')
+            # so.text_append.emit('账单近一个月数据更新,当前任务第'+str(num)+'次查询')
             res = askUrl(updateBillTableUrl+'?'+'settlementTimeStart=' +
                          timeStart+'&settlementTimeEnd='+str(endTime*1000))
             if(res['code'] == 200):
@@ -245,8 +349,6 @@ def updateBillThisMonth():
 
 
 def updateBillLastMonth():
-    time.sleep(7)
-    
     global startWork
     if(startWork == False):
         so.text_append.emit('更新循环已停止')
@@ -273,7 +375,7 @@ def updateBillLastMonth():
             timeEndFormat = time.localtime(endTime)
             # so.text_append.emit('账单上一个月数据更新,当前任务第'+str(num)+'次更新,查询范围:\n'+time.strftime(
             #     "%Y-%m-%d %H:%M:%S", timeStartFormat)+'至'+time.strftime("%Y-%m-%d %H:%M:%S", timeEndFormat))
-            so.text_append.emit('账单上一个月数据更新,当前任务第'+str(num)+'次更新')
+            # so.text_append.emit('账单上一个月数据更新,当前任务第'+str(num)+'次更新')
             res = askUrl(updateBillTableUrl+'?'+'settlementTimeStart=' +
                          timeStart+'&settlementTimeEnd='+str(endTime*1000))
             if(res['code'] == 200):
@@ -290,8 +392,6 @@ def updateBillLastMonth():
 
 
 def updateBillOtherMonth():
-    # time.sleep(2)
-    
     global startWork
     if(startWork == False):
         so.text_append.emit('更新循环已停止')
@@ -310,7 +410,7 @@ def updateBillOtherMonth():
         timeEndFormat = time.localtime(endTime)
         # so.text_append.emit('账单两个月前数据更新,当前任务第'+str(num)+'次更新,查询范围:\n'+time.strftime(
         #     "%Y-%m-%d %H:%M:%S", timeStartFormat)+'至'+time.strftime("%Y-%m-%d %H:%M:%S", timeEndFormat))
-        so.text_append.emit('账单两个月前数据更新,当前任务第'+str(num)+'次更新')
+        # so.text_append.emit('账单两个月前数据更新,当前任务第'+str(num)+'次更新')
         # print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(time.time()))))
         res = askUrl(updateBillTableUrl+'?'+'settlementTimeStart=' +
                      timeStart+'&settlementTimeEnd='+str(endTime*1000))
@@ -331,8 +431,6 @@ def updateBillOtherMonth():
 
 
 def updateThisMonth():
-    time.sleep(1)
-    
     global startWork
     if(startWork == False):
         so.text_append.emit('更新循环已停止')
@@ -342,6 +440,7 @@ def updateThisMonth():
         # so.text_append.emit('------------------')
         # so.text_append.emit('订单最近一个月数据更新循环第%d次\n' % allNum)
         num = 1
+        so.progress_update.emit(0)        
         endTime = (int(time.time()))
         timeStartFormatThis = time.localtime(endTime-30*24*60*60)
         timeEndFormatThis = time.localtime(endTime)
@@ -359,7 +458,7 @@ def updateThisMonth():
             timeEndFormat = time.localtime(endTime)
             # so.text_append.emit('订单近一个月数据更新,当前任务第'+str(num)+'次更新,查询范围:\n'+time.strftime(
             #     "%Y-%m-%d %H:%M:%S", timeStartFormat)+'至'+time.strftime("%Y-%m-%d %H:%M:%S", timeEndFormat))
-            so.text_append.emit('订单最近一个月数据更新,当前循环第'+str(num)+'次查询')
+            # so.text_append.emit('订单最近一个月数据更新,当前循环第'+str(num)+'次查询')
             res = askUrl(updateOrderTableUrl+'?'+'orderCreateTimeStart=' +
                          timeStart+'&orderCreateTimeEnd='+str(endTime*1000))
             if(res['code'] == 200):
@@ -374,8 +473,6 @@ def updateThisMonth():
 
 
 def updateLastMonth():
-    time.sleep(3)
-    
     global startWork
     if(startWork == False):
         so.text_append.emit('更新循环已停止')
@@ -403,7 +500,7 @@ def updateLastMonth():
             # so.text_append.emit('订单上一个月数据更新,当前任务第'+str(num)+'次更新,查询范围:\n'+time.strftime(
             #     "%Y-%m-%d %H:%M:%S", timeStartFormat)+'至'+time.strftime("%Y-%m-%d %H:%M:%S", timeEndFormat))
             # so.text_append.emit('------------------')
-            so.text_append.emit('订单上一个月数据更新,当前任务第'+str(num)+'次更新')
+            # so.text_append.emit('订单上一个月数据更新,当前任务第'+str(num)+'次更新')
             res = askUrl(updateOrderTableUrl+'?'+'orderCreateTimeStart=' +
                          timeStart+'&orderCreateTimeEnd='+str(endTime*1000))
             if(res['code'] == 200):
@@ -436,7 +533,7 @@ def updateOtherMonth():
         timeEndFormat = time.localtime(endTime)
         # so.text_append.emit('订单两个月前数据更新,当前任务第'+str(num)+'次更新,查询范围:\n'+time.strftime(
         #     "%Y-%m-%d %H:%M:%S", timeStartFormat)+'至'+time.strftime("%Y-%m-%d %H:%M:%S", timeEndFormat))
-        so.text_append.emit('订单两个月前数据更新,当前任务第'+str(num)+'次更新')
+        # so.text_append.emit('订单两个月前数据更新,当前任务第'+str(num)+'次更新')
         # print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(time.time()))))
         res = askUrl(updateOrderTableUrl+'?'+'orderCreateTimeStart=' +
                      timeStart+'&orderCreateTimeEnd='+str(endTime*1000))
