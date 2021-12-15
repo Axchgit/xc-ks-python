@@ -189,9 +189,9 @@ def isTimeFrame():
     thisFunctionStart = True
     while True:
         d_time = datetime.datetime.strptime(
-            str(datetime.datetime.now().date())+'02:45', '%Y-%m-%d%H:%M')
+            str(datetime.datetime.now().date())+'00:00', '%Y-%m-%d%H:%M')
         d_time1 = datetime.datetime.strptime(
-            str(datetime.datetime.now().date())+'03:05', '%Y-%m-%d%H:%M')
+            str(datetime.datetime.now().date())+'07:00', '%Y-%m-%d%H:%M')
         # 当前时间
         n_time = datetime.datetime.now()
         # print(n_time)
@@ -226,9 +226,9 @@ def deleteUpdateFile():
     # 范围时间
     while True:
         d_time = datetime.datetime.strptime(
-            str(datetime.datetime.now().date())+'03:00', '%Y-%m-%d%H:%M')
+            str(datetime.datetime.now().date())+'00:30', '%Y-%m-%d%H:%M')
         d_time1 = datetime.datetime.strptime(
-            str(datetime.datetime.now().date())+'03:05', '%Y-%m-%d%H:%M')
+            str(datetime.datetime.now().date())+'00:35', '%Y-%m-%d%H:%M')
         # 当前时间
         n_time = datetime.datetime.now()
         # print(n_time)
