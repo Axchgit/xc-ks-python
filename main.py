@@ -74,7 +74,7 @@ class MainWindow(QMainWindow):
         # qfile_ks.open(QFile.ReadOnly)
         # qfile_ks.close()
 
-        self.ui = QUiLoader().load("ks.ui")
+        self.ui = QUiLoader().load("ui\ks.ui")
         # super(mainWindow, self).__init__()
         # self.setupUi(self)
         self.ui.pushButton_start.clicked.connect(self.bt_start)
