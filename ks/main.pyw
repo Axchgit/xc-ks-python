@@ -46,8 +46,8 @@ updateBeginTime = 1617120000
 updateDayCell = 5
 
 startWork = True
-workSleep = 0
-secondWorkSleep = 0
+workSleep = 3600
+secondWorkSleep = 7200
 # designer.exe地址
 # C:\Users\10278\AppData\Local\Programs\Python\Python38\Lib\site-packages\qt5_applications\Qt\bin
 
@@ -74,7 +74,7 @@ class MainWindow(QMainWindow):
         # qfile_ks.open(QFile.ReadOnly)
         # qfile_ks.close()
 
-        self.ui = QUiLoader().load("D:\\wamp64\\www\\xc-ks-python\\ui\ks.ui")
+        self.ui = QUiLoader().load("ks.ui")
         # super(mainWindow, self).__init__()
         # self.setupUi(self)
         self.ui.pushButton_start.clicked.connect(self.bt_start)
@@ -106,14 +106,14 @@ class MainWindow(QMainWindow):
             so.text_append.emit('正在更新旧数据')
         else:
             Thread(target=updateThisMonth, name='updateThisMonth').start()
-            # Thread(target=updateBillThisMonth,name='updateBillThisMonth').start()
-            # time.sleep(5)
+            Thread(target=updateBillThisMonth,name='updateBillThisMonth').start()
+            # time.sleep(1)
             Thread(target=updateLastMonth, name='updateLastMonth').start()
-            # time.sleep(5)
-            # Thread(target=updateBillLastMonth, name='updateBillLastMonth').start()
-            # time.sleep(5)
-            # Thread(target=updateActivityList,name='updateActivityList').start()
-            # time.sleep(5)
+            # time.sleep(1)
+            Thread(target=updateBillLastMonth, name='updateBillLastMonth').start()
+            # time.sleep(1)
+            Thread(target=updateActivityList,name='updateActivityList').start()
+            # time.sleep(1)
 
     def bt_stop(self):
         global startWork
@@ -128,8 +128,8 @@ class MainWindow(QMainWindow):
         # so.text_append.emit('你点击了开始更新按钮')
         if not repeat_thread_detection('updateOtherMonth'):
             Thread(target=updateOtherMonth, name='updateOtherMonth').start()
-            # Thread(target=updateBillOtherMonth,name='updateBillOtherMonth').start()
-            # Thread(target=updateOtherActivityList,name='updateOtherActivityList').start()
+            Thread(target=updateBillOtherMonth,name='updateBillOtherMonth').start()
+            Thread(target=updateOtherActivityList,name='updateOtherActivityList').start()
 
         else:
             # print('func线程还处于活动状态，请勿启动新的实例')
@@ -143,6 +143,8 @@ class MainWindow(QMainWindow):
 
 
 def updateActivityList():
+    time.sleep(2)
+    
     global startWork
     if(startWork == False):
         so.text_append.emit('更新循环已停止')
@@ -200,6 +202,8 @@ def updateOtherActivityList():
 
 
 def updateBillThisMonth():
+    time.sleep(6)
+    
     global startWork
     if(startWork == False):
         so.text_append.emit('更新循环已停止')
@@ -241,6 +245,8 @@ def updateBillThisMonth():
 
 
 def updateBillLastMonth():
+    time.sleep(7)
+    
     global startWork
     if(startWork == False):
         so.text_append.emit('更新循环已停止')
@@ -284,6 +290,8 @@ def updateBillLastMonth():
 
 
 def updateBillOtherMonth():
+    # time.sleep(2)
+    
     global startWork
     if(startWork == False):
         so.text_append.emit('更新循环已停止')

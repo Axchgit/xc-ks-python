@@ -20,14 +20,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>学创快手招商系统数据库更新器</string>
-  </property>
-  <property name="windowIcon">
-   <iconset>
-    <normaloff>../ks/xc_logo.png</normaloff>../ks/xc_logo.png</iconset>
-  </property>
-  <property name="windowOpacity">
-   <double>1.000000000000000</double>
+   <string>ks</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QLabel" name="label_message">
