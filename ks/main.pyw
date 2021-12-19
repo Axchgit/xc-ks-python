@@ -278,6 +278,7 @@ def updateActivityList():
                 so.text_append.emit(
                     '错误原因:\n%s' % res['data'])
             num = num + 1
+            time.sleep(0.5)            
         allNum = allNum+1
         time.sleep(workSleep)
 
